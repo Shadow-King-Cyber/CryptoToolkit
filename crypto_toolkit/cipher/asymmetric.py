@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 
 from cryptography.hazmat.primitives.asymmetric import rsa, ec, padding as asym_padding
