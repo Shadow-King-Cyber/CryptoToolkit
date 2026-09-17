@@ -21,6 +21,8 @@ class KeyResult:
 
 def generate_aes_key(bits: int = 256) -> KeyResult:
     """Genera una clave AES aleatoria."""
+    if bits not in (128, 192, 256):
+        raise ValueError(f"bits debe ser 128, 192 o 256, se obtuvo {bits}")
     key = os.urandom(bits // 8)
     return KeyResult(
         key_type="AES",

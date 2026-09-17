@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import codecs
 from urllib.parse import quote, unquote
 
@@ -16,7 +17,10 @@ def base64_encode(data: str | bytes) -> str:
 
 def base64_decode(encoded: str) -> str:
     """Decodifica datos de Base64."""
-    return base64.b64decode(encoded).decode("utf-8")
+    try:
+        return base64.b64decode(encoded).decode("utf-8")
+    except (binascii.Error, ValueError) as exc:
+        raise ValueError(f"Entrada no es Base64 válido: {exc}") from exc
 
 
 def hex_encode(data: str | bytes) -> str:
@@ -28,7 +32,10 @@ def hex_encode(data: str | bytes) -> str:
 
 def hex_decode(encoded: str) -> str:
     """Decodifica datos de hexadecimal."""
-    return bytes.fromhex(encoded).decode("utf-8")
+    try:
+        return bytes.fromhex(encoded).decode("utf-8")
+    except ValueError as exc:
+        raise ValueError(f"Entrada no es hexadecimal válido: {exc}") from exc
 
 
 def url_encode(data: str) -> str:

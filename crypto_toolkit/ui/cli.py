@@ -11,7 +11,10 @@ from ..cipher.encoding import (
     url_encode, url_decode, rot13, rot47,
 )
 from ..analysis.password_strength import analyze_password
-from ..analysis.key_generator import generate_aes_key, generate_fernet_key, generate_rsa_keypair as gen_rsa
+from ..analysis.key_generator import (
+    generate_aes_key, generate_fernet_key,
+    generate_rsa_keypair as gen_rsa, generate_ecc_keypair as gen_ecc,
+)
 from ..utils.entropy import calculate_entropy, entropy_rating
 
 
@@ -46,7 +49,10 @@ def hash_all(data: str) -> None:
 def crack(hash_value: str, algorithm: str, wordlist: str) -> None:
     """Crackea un hash con un wordlist."""
     from pathlib import Path
-    words = Path(wordlist).read_text().splitlines()
+    try:
+        words = Path(wordlist).read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise click.ClickException(f"No se pudo leer el wordlist '{wordlist}': {exc}") from exc
     click.echo(f"[*] Probando {len(words)} palabras...")
     result = crack_hash(hash_value, algorithm, words)
     if result.found:
@@ -102,7 +108,7 @@ def check_password(password: str) -> None:
 
 
 @cli.command()
-@click.option("--type", "key_type", type=click.Choice(["aes", "fernet", "rsa", "random"]), default="aes")
+@click.option("--type", "key_type", type=click.Choice(["aes", "fernet", "rsa", "ecc", "random"]), default="aes")
 @click.option("--bits", default=256, help="Tamaño de clave")
 def keygen(key_type: str, bits: int) -> None:
     """Genera claves criptográficas."""
@@ -116,6 +122,10 @@ def keygen(key_type: str, bits: int) -> None:
         priv, pub = gen_rsa(bits)
         click.echo(f"[+] RSA Private:\n{priv.key_value}")
         click.echo(f"[+] RSA Public:\n{pub.key_value}")
+    elif key_type == "ecc":
+        priv, pub = gen_ecc()
+        click.echo(f"[+] ECC Private:\n{priv.key_value}")
+        click.echo(f"[+] ECC Public:\n{pub.key_value}")
     elif key_type == "random":
         from ..analysis.key_generator import generate_random_bytes
         result = generate_random_bytes(bits // 8)
